@@ -115,4 +115,5 @@ export interface Settings {
   expenseCategories: string[];
   securityPin: string; 
   viewMode: 'standard' | 'wireframe';
+  geminiApiKey: string;
 }

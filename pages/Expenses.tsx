@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AppData, Expense, Settings } from '../types';
-import { Plus, Trash2, Calendar, Tag } from 'lucide-react';
+import { Plus, Trash2, Calendar, Tag, BarChart3 } from 'lucide-react';
 import { ConfirmModal } from '../components/ConfirmModal';
 
 interface ExpensesProps {
@@ -13,6 +13,24 @@ const Expenses: React.FC<ExpensesProps> = ({ data, onUpdate, settings }) => {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<string>(settings.expenseCategories[0] || 'Other');
+  
+  const monthlySummary = useMemo(() => {
+     const summary: Record<string, Record<string, number>> = {};
+     
+     data.expenses.forEach(exp => {
+        const date = new Date(exp.date);
+        const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        const sortKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (!summary[sortKey]) summary[sortKey] = { __total: 0, _display: monthYear as any };
+        if (!summary[sortKey][exp.category]) summary[sortKey][exp.category] = 0;
+        
+        summary[sortKey][exp.category] += exp.amount;
+        summary[sortKey].__total += exp.amount;
+     });
+
+     return Object.entries(summary).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [data.expenses]);
   
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -170,6 +188,38 @@ const Expenses: React.FC<ExpensesProps> = ({ data, onUpdate, settings }) => {
           </div>
         </div>
       </div>
+
+      {monthlySummary.length > 0 && (
+         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col mt-6">
+            <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2"><BarChart3 size={20} className="text-primary"/> Monthly Spending Report</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {monthlySummary.map(([sortKey, monthData]) => (
+                    <div key={sortKey} className="border border-slate-100 rounded-xl p-4 bg-slate-50 relative overflow-hidden group hover:border-slate-300 transition-colors">
+                        <div className="flex justify-between items-end mb-4 border-b border-slate-200 pb-3">
+                            <span className="font-bold text-slate-800 text-lg">{monthData._display}</span>
+                            <span className="text-sm font-black text-slate-600 bg-white px-2.5 py-1 rounded-md shadow-sm border border-slate-100">{settings.currency} {monthData.__total.toFixed(2)}</span>
+                        </div>
+                        <div className="space-y-2">
+                            {Object.entries(monthData)
+                                .filter(([k]) => k !== '__total' && k !== '_display')
+                                .sort((a, b) => (b[1] as number) - (a[1] as number))
+                                .map(([k, currentVal]) => (
+                                    <div key={k} className="flex justify-between text-sm items-center">
+                                         <span className="text-slate-500 font-medium">{k}</span>
+                                         <div className="flex items-center gap-3 w-1/2">
+                                             <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                                 <div className="h-full bg-primary/60 rounded-full" style={{width: `${((currentVal as number) / monthData.__total) * 100}%`}}></div>
+                                             </div>
+                                             <span className="font-bold text-slate-700 w-16 text-right">{settings.currency} {(currentVal as number).toFixed(0)}</span>
+                                         </div>
+                                    </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+         </div>
+      )}
       
       <ConfirmModal 
         {...confirmModal}

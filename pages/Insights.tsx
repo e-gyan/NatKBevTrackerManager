@@ -66,7 +66,7 @@ const Insights: React.FC<InsightsProps> = ({ data, settings, onUpdate }) => {
   const handleAsk = async () => {
     if (!question.trim()) return;
 
-    let key = process.env.API_KEY || apiKeyInput;
+    let key = process.env.API_KEY || settings.geminiApiKey || apiKeyInput;
     if (!key) {
       setShowKeyInput(true);
       return;

@@ -237,7 +237,7 @@ const Storefront: React.FC<StorefrontProps> = ({ data, settings, onUpdate, onBac
       setAiInput('');
       setAiLoading(true);
 
-      const apiKey = process.env.API_KEY || ''; // In real app, secure backend proxy
+      const apiKey = process.env.API_KEY || settings.geminiApiKey || ''; // In real app, secure backend proxy
       const response = await chatWithStoreAssistant(userMsg, data.products, apiKey);
 
       setAiChatHistory(prev => [...prev, {sender: 'bot', text: response}]);

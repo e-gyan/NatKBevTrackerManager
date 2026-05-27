@@ -19,6 +19,7 @@ const Sales: React.FC<SalesProps> = ({ data, onUpdate, settings }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [checkoutComplete, setCheckoutComplete] = useState(false);
+  const [receiptData, setReceiptData] = useState<{items: CartItem[], total: number, date: string, method: string} | null>(null);
 
   // Promotions State
   const [promoForm, setPromoForm] = useState<Partial<Promotion>>({
@@ -209,11 +210,19 @@ const Sales: React.FC<SalesProps> = ({ data, onUpdate, settings }) => {
       transactions: [...newTransactions, ...data.transactions]
     });
 
+    const receiptTotal = cart.reduce((sum, item) => sum + (item.sellPrice * (1 - item.discount / 100)) * item.quantity, 0);
+    setReceiptData({ items: [...cart], total: receiptTotal, date: new Date().toLocaleString(), method: paymentMethod });
+
     setCheckoutComplete(true);
+    setTimeout(() => {
+      window.print();
+    }, 300);
+
     setTimeout(() => {
       setCheckoutComplete(false);
       setCart([]);
-    }, 2000);
+      setReceiptData(null);
+    }, 3000);
   };
 
   // --- ONLINE ORDER LOGIC ---
@@ -442,6 +451,7 @@ const Sales: React.FC<SalesProps> = ({ data, onUpdate, settings }) => {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-2rem)] relative">
+      <div className="print:hidden flex flex-col h-full relative">
       {/* Tabs */}
       <div className="flex space-x-4 mb-4 border-b border-slate-200 overflow-x-auto shrink-0 w-full max-w-full pb-1 scrollbar-hide">
         <button onClick={() => setActiveTab('POS')} className={`pb-2 px-4 font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${activeTab === 'POS' ? 'border-b-2 border-primary text-primary' : 'text-slate-400'}`}>
@@ -1126,6 +1136,46 @@ const Sales: React.FC<SalesProps> = ({ data, onUpdate, settings }) => {
         {...confirmModal}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />
+      </div>
+
+      {receiptData && (
+          <div className="hidden print:block absolute top-0 left-0 w-full min-h-full bg-white z-[9999] p-8 text-black" style={{ fontFamily: 'monospace' }}>
+              <div className="max-w-md mx-auto print:mx-0 p-4 border border-slate-300 rounded-lg">
+                  <h2 className="text-2xl font-bold mb-2 uppercase text-center">{settings.storeName || 'Receipt'}</h2>
+                  <p className="mb-4 text-xs text-center border-b border-dashed border-slate-300 pb-2">Date: {receiptData.date}</p>
+                  
+                  <div className="py-2">
+                      <div className="flex justify-between text-xs font-bold border-b border-slate-300 pb-1 mb-2">
+                          <span>Item</span>
+                          <span>Amount</span>
+                      </div>
+                      {receiptData.items.map((item, i) => (
+                          <div key={i} className="flex justify-between mb-2 pb-2 border-b border-dashed border-slate-100 last:border-0 last:pb-0">
+                               <div className="text-left text-sm max-w-[70%]">
+                                    <span className="font-bold">{item.quantity}x</span> {item.name}
+                                    {item.discount > 0 && <span className="block text-xs mt-0.5">({item.discount}% Off applied)</span>}
+                               </div>
+                               <div className="text-right text-sm">
+                                    {settings.currency}{((item.sellPrice * (1 - item.discount / 100)) * item.quantity).toFixed(2)}
+                               </div>
+                          </div>
+                      ))}
+                  </div>
+
+                  <div className="border-t-2 border-slate-800 py-3 mt-2 flex justify-between items-center">
+                      <span className="font-bold text-lg">TOTAL</span>
+                      <span className="font-black text-xl">{settings.currency}{receiptData.total.toFixed(2)}</span>
+                  </div>
+                  
+                  <div className="mt-2 text-xs uppercase text-center text-slate-500 font-bold border-t border-slate-200 pt-3">
+                      Payment Method: {receiptData.method.replace('_', ' ')}
+                  </div>
+                  <div className="mt-6 text-center text-sm font-bold opacity-80 pb-4">
+                      Thank you for your purchase!
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };

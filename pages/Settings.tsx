@@ -414,6 +414,17 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, data, onUpdateDat
                 disabled={!isUnlocked && !!formData.securityPin}
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Gemini API Key</label>
+              <input 
+                type="password" 
+                value={formData.geminiApiKey || ''}
+                onChange={e => setFormData({...formData, geminiApiKey: e.target.value})}
+                className="w-full p-2 border border-slate-300 rounded-lg outline-none font-mono text-sm"
+                placeholder="AIzaSy..."
+                disabled={!isUnlocked && !!formData.securityPin}
+              />
+            </div>
           </div>
 
           {/* Lock Overlay */}
