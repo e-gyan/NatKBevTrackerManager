@@ -1,0 +1,122 @@
+{
+  "entities": {
+    "product": {
+      "title": "Product",
+      "description": "Inventory product",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "buyPrice": { "type": "number" },
+        "sellPrice": { "type": "number" },
+        "stock": { "type": "number" },
+        "minStock": { "type": "number" },
+        "category": { "type": "string" },
+        "barcode": { "type": "string" },
+        "size": { "type": "string" },
+        "defaultDiscount": { "type": "number" },
+        "isArchived": { "type": "boolean" },
+        "lastPriceUpdate": { "type": "string" }
+      },
+      "required": ["name", "buyPrice", "sellPrice", "stock", "minStock", "category"]
+    },
+    "transaction": {
+      "title": "Transaction",
+      "description": "Sale or Purchase transaction",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["SALE", "PURCHASE"] },
+        "source": { "type": "string", "enum": ["POS", "ONLINE"] },
+        "status": { "type": "string", "enum": ["COMPLETED", "PENDING", "DELIVERED", "CANCELLED"] },
+        "paymentStatus": { "type": "string", "enum": ["PAID", "PENDING", "FAILED", "REFUNDED"] },
+        "deliveryMode": { "type": "string", "enum": ["PICKUP", "DELIVERY"] },
+        "momoDetails": { "type": "object" },
+        "deliveryDetails": { "type": "object" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "profit": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["CASH", "MOMO", "BANK_TRANSFER", "OTHER"] },
+        "date": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["type", "items", "totalAmount", "profit", "paymentMethod", "date"]
+    },
+    "expense": {
+      "title": "Expense",
+      "description": "Operational expense",
+      "type": "object",
+      "properties": {
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "date": { "type": "string" }
+      },
+      "required": ["description", "amount", "category", "date"]
+    },
+    "promotion": {
+      "title": "Promotion",
+      "description": "Sales promotion setup",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "items": { "type": "array" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["name", "price", "startDate", "endDate", "items", "isActive"]
+    },
+    "aiChat": {
+      "title": "AIChat",
+      "description": "Chat log with AI assistant",
+      "type": "object",
+      "properties": {
+        "question": { "type": "string" },
+        "answer": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "category": { "type": "string" }
+      },
+      "required": ["question", "answer", "timestamp"]
+    },
+    "customer": {
+      "title": "Customer",
+      "description": "Customer database entry",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "totalSpent": { "type": "number" },
+        "joinedDate": { "type": "string" }
+      },
+      "required": ["name", "phone", "totalSpent", "joinedDate"]
+    }
+  },
+  "firestore": {
+    "products": {
+      "schema": { "$ref": "#/entities/product" },
+      "description": "All inventory products"
+    },
+    "transactions": {
+      "schema": { "$ref": "#/entities/transaction" },
+      "description": "Sales and purchases"
+    },
+    "expenses": {
+      "schema": { "$ref": "#/entities/expense" },
+      "description": "Operational expenses"
+    },
+    "promotions": {
+      "schema": { "$ref": "#/entities/promotion" },
+      "description": "Promotions configured"
+    },
+    "aiChats": {
+      "schema": { "$ref": "#/entities/aiChat" },
+      "description": "AI conversation history"
+    },
+    "customers": {
+      "schema": { "$ref": "#/entities/customer" },
+      "description": "Customer records"
+    }
+  }
+}

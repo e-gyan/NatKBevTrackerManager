@@ -1,0 +1,156 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { 
+        return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+
+    // Since we fetch the data via `getDocs(collection)`, we allow list if isOwner
+    
+    // ----------------------------------------------------
+    // Products Collection
+    // ----------------------------------------------------
+    function isValidProduct(data) {
+        return data.keys().hasAll(['name', 'buyPrice', 'sellPrice', 'stock', 'minStock', 'category']) &&
+               data.name is string && data.name.size() <= 200 &&
+               data.buyPrice is number &&
+               data.sellPrice is number &&
+               data.stock is number &&
+               data.minStock is number &&
+               data.category is string && data.category.size() <= 100 &&
+               (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+               (!('barcode' in data) || (data.barcode is string && data.barcode.size() <= 50)) &&
+               (!('size' in data) || (data.size is string && data.size.size() <= 50)) &&
+               (!('defaultDiscount' in data) || data.defaultDiscount is number) &&
+               (!('isArchived' in data) || data.isArchived is bool) &&
+               (!('lastPriceUpdate' in data) || (data.lastPriceUpdate is string && data.lastPriceUpdate.size() <= 100)) &&
+               (!('id' in data) || (data.id is string && data.id.size() <= 128));
+    }
+
+    match /users/{userId}/products/{productId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(productId) && isValidProduct(incoming());
+        allow update: if isOwner(userId) && isValidId(productId) && isValidProduct(incoming());
+        allow delete: if isOwner(userId) && isValidId(productId);
+    }
+
+    // ----------------------------------------------------
+    // Transactions Collection
+    // ----------------------------------------------------
+    function isValidTransaction(data) {
+        return data.keys().hasAll(['type', 'items', 'totalAmount', 'profit', 'paymentMethod', 'date']) &&
+               data.type is string && data.type in ['SALE', 'PURCHASE'] &&
+               data.items is list && data.items.size() <= 500 && data.items[0] is map && // rough list check
+               data.totalAmount is number &&
+               data.profit is number &&
+               data.paymentMethod is string && data.paymentMethod in ['CASH', 'MOMO', 'BANK_TRANSFER', 'OTHER'] &&
+               data.date is string && data.date.size() <= 50 &&
+               (!('source' in data) || (data.source is string && data.source in ['POS', 'ONLINE'])) &&
+               (!('status' in data) || (data.status is string && data.status in ['COMPLETED', 'PENDING', 'PROCESSING', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'])) &&
+               (!('paymentStatus' in data) || (data.paymentStatus is string && data.paymentStatus in ['PAID', 'PENDING', 'FAILED', 'REFUNDED'])) &&
+               (!('deliveryMode' in data) || (data.deliveryMode is string && data.deliveryMode in ['PICKUP', 'DELIVERY'])) &&
+               (!('momoDetails' in data) || data.momoDetails is map) &&
+               (!('deliveryDetails' in data) || data.deliveryDetails is map) &&
+               (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000)) &&
+               (!('id' in data) || (data.id is string && data.id.size() <= 128));
+    }
+
+    match /users/{userId}/transactions/{txId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(txId) && isValidTransaction(incoming());
+        allow update: if isOwner(userId) && isValidId(txId) && isValidTransaction(incoming());
+        allow delete: if isOwner(userId) && isValidId(txId);
+    }
+
+    // ----------------------------------------------------
+    // Expenses Collection
+    // ----------------------------------------------------
+    function isValidExpense(data) {
+        return data.keys().hasAll(['description', 'amount', 'category', 'date']) &&
+               data.description is string && data.description.size() <= 500 &&
+               data.amount is number &&
+               data.category is string && data.category.size() <= 100 &&
+               data.date is string && data.date.size() <= 50 &&
+               (!('id' in data) || (data.id is string && data.id.size() <= 128));
+    }
+
+    match /users/{userId}/expenses/{docId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(docId) && isValidExpense(incoming());
+        allow update: if isOwner(userId) && isValidId(docId) && isValidExpense(incoming());
+        allow delete: if isOwner(userId) && isValidId(docId);
+    }
+
+    // ----------------------------------------------------
+    // Promotions Collection
+    // ----------------------------------------------------
+    function isValidPromotion(data) {
+        return data.keys().hasAll(['name', 'price', 'startDate', 'endDate', 'items', 'isActive']) &&
+               data.name is string && data.name.size() <= 200 &&
+               data.price is number &&
+               data.startDate is string && data.startDate.size() <= 50 &&
+               data.endDate is string && data.endDate.size() <= 50 &&
+               data.items is list && data.items.size() <= 100 &&
+               data.isActive is bool &&
+               (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+               (!('id' in data) || (data.id is string && data.id.size() <= 128));
+    }
+
+    match /users/{userId}/promotions/{docId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(docId) && isValidPromotion(incoming());
+        allow update: if isOwner(userId) && isValidId(docId) && isValidPromotion(incoming());
+        allow delete: if isOwner(userId) && isValidId(docId);
+    }
+
+    // ----------------------------------------------------
+    // AI Chats Collection
+    // ----------------------------------------------------
+    function isValidAiChat(data) {
+        return data.keys().hasAll(['question', 'answer', 'timestamp']) &&
+               data.question is string && data.question.size() <= 2000 &&
+               data.answer is string && data.answer.size() <= 10000 &&
+               data.timestamp is string && data.timestamp.size() <= 50 &&
+               (!('category' in data) || (data.category is string && data.category.size() <= 100)) &&
+               (!('id' in data) || (data.id is string && data.id.size() <= 128));
+    }
+
+    match /users/{userId}/aiChats/{docId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(docId) && isValidAiChat(incoming());
+        allow update: if isOwner(userId) && isValidId(docId) && isValidAiChat(incoming());
+        allow delete: if isOwner(userId) && isValidId(docId);
+    }
+
+    // ----------------------------------------------------
+    // Customers Collection
+    // ----------------------------------------------------
+    function isValidCustomer(data) {
+        return data.keys().hasAll(['name', 'phone', 'totalSpent', 'joinedDate']) &&
+               data.name is string && data.name.size() <= 200 &&
+               data.phone is string && data.phone.size() <= 50 &&
+               data.totalSpent is number &&
+               data.joinedDate is string && data.joinedDate.size() <= 50 &&
+               (!('id' in data) || (data.id is string && data.id.size() <= 128));
+    }
+
+    match /users/{userId}/customers/{docId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(docId) && isValidCustomer(incoming());
+        allow update: if isOwner(userId) && isValidId(docId) && isValidCustomer(incoming());
+        allow delete: if isOwner(userId) && isValidId(docId);
+    }
+  }
+}

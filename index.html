@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BevTracker Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#0d9488', // Teal 600
+              secondary: '#115e59', // Teal 800
+              accent: '#f0fdfa', // Teal 50
+              // Wireframe specific colors
+              wf: {
+                bg: '#fdfbf7', // Paper color
+                ink: '#2c3e50',
+                line: '#94a3b8'
+              }
+            },
+            screens: {
+              'print': {'raw': 'print'},
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* --- PRINT STYLES (PDF Export) --- */
+      @media print {
+        @page {
+          size: A4;
+          margin: 1.5cm;
+        }
+
+        body {
+          background-color: white !important;
+          color: black !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          font-family: sans-serif;
+        }
+
+        /* Essential Hiding */
+        .no-print, button, nav, .sidebar, aside, [role="button"] {
+          display: none !important;
+        }
+
+        /* Layout Resets */
+        #root, main, .flex-1, .md\:ml-64 {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+          display: block !important; /* Flatten flex containers */
+        }
+
+        /* Typography Optimizations */
+        h1, h2, h3 { 
+          page-break-after: avoid; 
+          color: #000 !important;
+        }
+        
+        p, li { 
+          font-size: 11pt; 
+          line-height: 1.6; 
+          orphans: 3; 
+          widows: 3; 
+          color: #222 !important;
+        }
+        
+        a { text-decoration: none !important; color: #000 !important; }
+
+        /* Section containment */
+        section {
+          break-inside: avoid;
+          page-break-inside: avoid;
+          margin-bottom: 2rem;
+          border: none !important;
+          box-shadow: none !important;
+        }
+      }
+
+      /* --- ENHANCED WIREFRAME MODE --- */
+      body.wireframe-mode {
+        font-family: 'Courier New', Courier, 'Lucida Sans Typewriter', monospace !important;
+        background-color: #ffffff !important;
+        background-image: radial-gradient(#d1d5db 1px, transparent 1px) !important;
+        background-size: 20px 20px !important;
+        color: #000000 !important;
+      }
+      
+      body.wireframe-mode * {
+        font-family: inherit !important;
+        transition: none !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+        border-radius: 0 !important; /* Square everything */
+      }
+
+      /* CONTAINERS (Cards, Sidebars) */
+      body.wireframe-mode .bg-white,
+      body.wireframe-mode .bg-slate-50,
+      body.wireframe-mode .bg-slate-100,
+      body.wireframe-mode .bg-slate-900,
+      body.wireframe-mode aside {
+        background-color: #ffffff !important;
+        border: 2px solid #000000 !important;
+        color: #000000 !important;
+      }
+
+      /* INTERACTIVE ELEMENTS (Buttons) */
+      /* Strong visual cue: Thick borders and hard shadows */
+      body.wireframe-mode button, 
+      body.wireframe-mode [role="button"] {
+        background-color: #ffffff !important;
+        border: 3px solid #000000 !important;
+        color: #000000 !important;
+        text-transform: uppercase;
+        font-weight: 900 !important;
+        letter-spacing: 1px;
+        box-shadow: 4px 4px 0px 0px #000000 !important;
+        position: relative;
+        top: 0;
+        left: 0;
+        margin: 2px;
+      }
+      
+      /* Active state for buttons */
+      body.wireframe-mode button:active {
+        box-shadow: 2px 2px 0px 0px #000000 !important;
+        top: 2px;
+        left: 2px;
+      }
+
+      /* FORM INPUTS */
+      /* Visual cue: Dashed lines or underlined boxes */
+      body.wireframe-mode input, 
+      body.wireframe-mode select, 
+      body.wireframe-mode textarea {
+        background-color: #f8fafc !important;
+        border: 2px dashed #475569 !important;
+        color: #000000 !important;
+        font-weight: bold;
+        padding: 8px !important;
+      }
+      
+      body.wireframe-mode input::placeholder {
+        font-style: italic;
+        color: #94a3b8 !important;
+      }
+
+      /* TEXT HIGHLIGHTS */
+      body.wireframe-mode .text-primary,
+      body.wireframe-mode .text-blue-600,
+      body.wireframe-mode .text-red-600,
+      body.wireframe-mode .text-green-600 {
+        color: #000000 !important;
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+      }
+
+      /* TABLES */
+      body.wireframe-mode table, 
+      body.wireframe-mode th, 
+      body.wireframe-mode td {
+        border: 1px solid #000000 !important;
+        background-color: transparent !important;
+      }
+
+      /* SVGs/Icons */
+      body.wireframe-mode svg {
+        stroke: #000000 !important;
+        stroke-width: 2.5px !important;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.37.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
