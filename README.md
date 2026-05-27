@@ -79,3 +79,26 @@ To bundle the application into optimized static assets for production:
 npm run build
 ```
 This generates compiled HTML, CSS, and JS inside the `dist/` directory, ready to be deployed to static hosts.
+
+## Deploying to Production (Vercel, Firebase, etc.)
+
+Since this is a client-side Vite application, it can be hosted on any static hosting provider. 
+
+**Step 1: Export your code**
+From AI Studio, click the **Settings** menu and select **Export to GitHub** (or download as a ZIP and push to a repo manually).
+
+**Option A: Deploy to Vercel (Easiest)**
+1. Log into [Vercel](https://vercel.com) and click **Add New Project**.
+2. Import your newly exported GitHub repository.
+3. Vercel will automatically detect the Vite framework. Keep the default settings (Build command: `npm run build`, Output directory: `dist`) and click **Deploy**.
+
+**Option B: Deploy to Firebase Hosting**
+Since the app already uses Firebase for data, Firebase Hosting is a great option.
+1. Install the Firebase CLI: `npm install -g firebase-tools`
+2. Login and initialize: `firebase login` then `firebase init hosting`
+3. When asked for the public directory, type `dist`.
+4. Configure as a single-page app (Rewrite all urls to `/index.html`? **Yes**).
+5. Build and deploy: `npm run build` then `firebase deploy --only hosting`.
+
+---
+Built with ⚡️ Vite, React, TypeScript, Tailwind CSS, Firebase, and Google Gemini.
